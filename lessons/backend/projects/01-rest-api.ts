@@ -11,68 +11,20 @@
  * - Query filtering and pagination
  * - PostgreSQL persistence with Drizzle ORM
  *
+ * Setup: Run `bun db:push` before running this project
  * Run: bun lessons/backend/projects/01-rest-api.ts
  */
 
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
-import {
-  pgTable,
-  serial,
-  text,
-  varchar,
-  timestamp,
-} from "drizzle-orm/pg-core";
-import { eq, and, ilike, sql, asc, desc } from "drizzle-orm";
+import { eq, and, ilike, desc } from "drizzle-orm";
+import { db } from "../src/db";
+import { projectTasks, type ProjectTask, type NewProjectTask } from "../src/db/schema";
 
 console.log("========================================");
 console.log("PROJECT: TASK MANAGER REST API");
 console.log("========================================\n");
-
-// ============================================================
-// Database Schema with Drizzle
-// ============================================================
-
-const tasksTable = pgTable("project_tasks", {
-  id: serial("id").primaryKey(),
-  title: varchar("title", { length: 100 }).notNull(),
-  description: varchar("description", { length: 500 }),
-  status: varchar("status", { length: 20 }).notNull().default("todo"),
-  priority: varchar("priority", { length: 20 }).notNull().default("medium"),
-  dueDate: timestamp("due_date"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
-
-type DbTask = typeof tasksTable.$inferSelect;
-type NewDbTask = typeof tasksTable.$inferInsert;
-
-// ============================================================
-// Database Connection
-// ============================================================
-
-const connectionString = "postgresql://learn:learn@localhost:5432/learn_db";
-const client = postgres(connectionString);
-const db = drizzle(client);
-
-// Create table if it doesn't exist
-async function setupDatabase() {
-  await client`
-    CREATE TABLE IF NOT EXISTS project_tasks (
-      id SERIAL PRIMARY KEY,
-      title VARCHAR(100) NOT NULL,
-      description VARCHAR(500),
-      status VARCHAR(20) NOT NULL DEFAULT 'todo',
-      priority VARCHAR(20) NOT NULL DEFAULT 'medium',
-      due_date TIMESTAMP,
-      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-      updated_at TIMESTAMP NOT NULL DEFAULT NOW()
-    )
-  `;
-}
 
 // ============================================================
 // Zod Schemas for Validation
@@ -126,7 +78,7 @@ const UpdateStatusSchema = z.object({
 // Helper: Convert DB row to API response
 // ============================================================
 
-function dbTaskToApi(task: DbTask): Task {
+function dbTaskToApi(task: ProjectTask): Task {
   return {
     id: task.id,
     title: task.title,
@@ -161,22 +113,22 @@ app.get("/tasks", zValidator("query", ListTasksQuerySchema), async (c) => {
   // Build conditions
   const conditions = [];
   if (status) {
-    conditions.push(eq(tasksTable.status, status));
+    conditions.push(eq(projectTasks.status, status));
   }
   if (priority) {
-    conditions.push(eq(tasksTable.priority, priority));
+    conditions.push(eq(projectTasks.priority, priority));
   }
   if (search) {
-    conditions.push(ilike(tasksTable.title, `%${search}%`));
+    conditions.push(ilike(projectTasks.title, `%${search}%`));
   }
 
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
   const tasks = await db
     .select()
-    .from(tasksTable)
+    .from(projectTasks)
     .where(whereClause)
-    .orderBy(desc(tasksTable.createdAt))
+    .orderBy(desc(projectTasks.createdAt))
     .limit(limit)
     .offset(offset);
 
@@ -189,7 +141,7 @@ app.get("/tasks", zValidator("query", ListTasksQuerySchema), async (c) => {
 
 // GET /tasks/stats - Get task statistics (before :id to avoid conflict)
 app.get("/tasks/stats", async (c) => {
-  const allTasks = await db.select().from(tasksTable);
+  const allTasks = await db.select().from(projectTasks);
 
   const stats = {
     total: allTasks.length,
@@ -217,8 +169,8 @@ app.get("/tasks/:id", async (c) => {
 
   const [task] = await db
     .select()
-    .from(tasksTable)
-    .where(eq(tasksTable.id, id));
+    .from(projectTasks)
+    .where(eq(projectTasks.id, id));
 
   if (!task) {
     return c.json({ error: "Task not found" }, 404);
@@ -231,7 +183,7 @@ app.get("/tasks/:id", async (c) => {
 app.post("/tasks", zValidator("json", CreateTaskSchema), async (c) => {
   const data = c.req.valid("json");
 
-  const insertData: NewDbTask = {
+  const insertData: NewProjectTask = {
     title: data.title,
     description: data.description,
     status: data.status,
@@ -239,7 +191,7 @@ app.post("/tasks", zValidator("json", CreateTaskSchema), async (c) => {
     dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
   };
 
-  const [task] = await db.insert(tasksTable).values(insertData).returning();
+  const [task] = await db.insert(projectTasks).values(insertData).returning();
 
   return c.json(dbTaskToApi(task), 201);
 });
@@ -256,14 +208,14 @@ app.put("/tasks/:id", zValidator("json", UpdateTaskSchema), async (c) => {
   // Check if task exists
   const [existing] = await db
     .select()
-    .from(tasksTable)
-    .where(eq(tasksTable.id, id));
+    .from(projectTasks)
+    .where(eq(projectTasks.id, id));
 
   if (!existing) {
     return c.json({ error: "Task not found" }, 404);
   }
 
-  const updateData: Partial<NewDbTask> = {
+  const updateData: Partial<NewProjectTask> = {
     updatedAt: new Date(),
   };
 
@@ -276,9 +228,9 @@ app.put("/tasks/:id", zValidator("json", UpdateTaskSchema), async (c) => {
   }
 
   const [task] = await db
-    .update(tasksTable)
+    .update(projectTasks)
     .set(updateData)
-    .where(eq(tasksTable.id, id))
+    .where(eq(projectTasks.id, id))
     .returning();
 
   return c.json(dbTaskToApi(task));
@@ -299,17 +251,17 @@ app.patch(
     // Check if task exists
     const [existing] = await db
       .select()
-      .from(tasksTable)
-      .where(eq(tasksTable.id, id));
+      .from(projectTasks)
+      .where(eq(projectTasks.id, id));
 
     if (!existing) {
       return c.json({ error: "Task not found" }, 404);
     }
 
     const [task] = await db
-      .update(tasksTable)
+      .update(projectTasks)
       .set({ status, updatedAt: new Date() })
-      .where(eq(tasksTable.id, id))
+      .where(eq(projectTasks.id, id))
       .returning();
 
     return c.json(dbTaskToApi(task));
@@ -324,8 +276,8 @@ app.delete("/tasks/:id", async (c) => {
   }
 
   const [deleted] = await db
-    .delete(tasksTable)
-    .where(eq(tasksTable.id, id))
+    .delete(projectTasks)
+    .where(eq(projectTasks.id, id))
     .returning();
 
   if (!deleted) {
@@ -358,10 +310,10 @@ let failed = 0;
 // Helper to reset data in database
 async function resetTasks() {
   // Clear all tasks
-  await db.delete(tasksTable);
+  await db.delete(projectTasks);
 
   // Insert test data
-  await db.insert(tasksTable).values([
+  await db.insert(projectTasks).values([
     {
       title: "Task 1",
       status: "todo",
@@ -379,9 +331,6 @@ async function resetTasks() {
     },
   ]);
 }
-
-// Initialize database and run tests
-await setupDatabase();
 
 // Test: List tasks
 await resetTasks();
@@ -617,6 +566,3 @@ console.log(`\n${passed}/${passed + failed} tests passed`);
 if (failed === 0) {
   console.log("\nProject complete! You've built a REST API with PostgreSQL!");
 }
-
-// Clean up
-await client.end();

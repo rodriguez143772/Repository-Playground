@@ -2,7 +2,7 @@ import { pgTable, serial, text, boolean, timestamp, varchar, integer } from "dri
 import { relations } from "drizzle-orm";
 
 // ============================================================================
-// TASKS TABLE - For REST API Project
+// TASKS TABLE - For REST API Lessons
 // ============================================================================
 
 export const tasks = pgTable("tasks", {
@@ -20,7 +20,7 @@ export type Task = typeof tasks.$inferSelect;
 export type NewTask = typeof tasks.$inferInsert;
 
 // ============================================================================
-// URLS TABLE - For URL Shortener Project
+// URLS TABLE - For URL Shortener Lessons
 // ============================================================================
 
 export const urls = pgTable("urls", {
@@ -35,6 +35,43 @@ export const urls = pgTable("urls", {
 // Type inference helpers for urls
 export type Url = typeof urls.$inferSelect;
 export type NewUrl = typeof urls.$inferInsert;
+
+// ============================================================================
+// PROJECT TASKS TABLE - For Project 01 (REST API Task Manager)
+// ============================================================================
+
+export const projectTasks = pgTable("project_tasks", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 100 }).notNull(),
+  description: varchar("description", { length: 500 }),
+  status: varchar("status", { length: 20 }).notNull().default("todo"),
+  priority: varchar("priority", { length: 20 }).notNull().default("medium"),
+  dueDate: timestamp("due_date"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Type inference helpers for project tasks
+export type ProjectTask = typeof projectTasks.$inferSelect;
+export type NewProjectTask = typeof projectTasks.$inferInsert;
+
+// ============================================================================
+// PROJECT URLS TABLE - For Project 03 (URL Shortener)
+// ============================================================================
+
+export const projectUrls = pgTable("project_urls", {
+  id: text("id").primaryKey(),
+  shortCode: varchar("short_code", { length: 20 }).notNull().unique(),
+  originalUrl: text("original_url").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  expiresAt: timestamp("expires_at"),
+  clicks: integer("clicks").notNull().default(0),
+  lastClickAt: timestamp("last_click_at"),
+});
+
+// Type inference helpers for project urls
+export type ProjectUrl = typeof projectUrls.$inferSelect;
+export type NewProjectUrl = typeof projectUrls.$inferInsert;
 
 // ============================================================================
 // USERS TABLE - For Authentication Examples

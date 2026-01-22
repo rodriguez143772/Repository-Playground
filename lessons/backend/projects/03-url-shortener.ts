@@ -12,66 +12,20 @@
  * - Expiration dates
  * - PostgreSQL persistence with Drizzle ORM
  *
+ * Setup: Run `bun db:push` before running this project
  * Run: bun lessons/backend/projects/03-url-shortener.ts
  */
 
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
-import {
-  pgTable,
-  text,
-  varchar,
-  timestamp,
-  integer,
-} from "drizzle-orm/pg-core";
 import { eq, desc, asc } from "drizzle-orm";
+import { db } from "../src/db";
+import { projectUrls, type ProjectUrl, type NewProjectUrl } from "../src/db/schema";
 
 console.log("========================================");
 console.log("PROJECT: URL SHORTENER");
 console.log("========================================\n");
-
-// ============================================================
-// Database Schema with Drizzle
-// ============================================================
-
-const urlsTable = pgTable("project_urls", {
-  id: text("id").primaryKey(),
-  shortCode: varchar("short_code", { length: 20 }).notNull().unique(),
-  originalUrl: text("original_url").notNull(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  expiresAt: timestamp("expires_at"),
-  clicks: integer("clicks").notNull().default(0),
-  lastClickAt: timestamp("last_click_at"),
-});
-
-type DbUrl = typeof urlsTable.$inferSelect;
-type NewDbUrl = typeof urlsTable.$inferInsert;
-
-// ============================================================
-// Database Connection
-// ============================================================
-
-const connectionString = "postgresql://learn:learn@localhost:5432/learn_db";
-const client = postgres(connectionString);
-const db = drizzle(client);
-
-// Create table if it doesn't exist
-async function setupDatabase() {
-  await client`
-    CREATE TABLE IF NOT EXISTS project_urls (
-      id TEXT PRIMARY KEY,
-      short_code VARCHAR(20) NOT NULL UNIQUE,
-      original_url TEXT NOT NULL,
-      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-      expires_at TIMESTAMP,
-      clicks INTEGER NOT NULL DEFAULT 0,
-      last_click_at TIMESTAMP
-    )
-  `;
-}
 
 // ============================================================
 // Types and Schemas
@@ -127,17 +81,17 @@ function generateShortCode(): string {
 async function isCodeAvailable(code: string): Promise<boolean> {
   const [existing] = await db
     .select()
-    .from(urlsTable)
-    .where(eq(urlsTable.shortCode, code));
+    .from(projectUrls)
+    .where(eq(projectUrls.shortCode, code));
   return !existing;
 }
 
-function isExpired(url: DbUrl): boolean {
+function isExpired(url: ProjectUrl): boolean {
   if (!url.expiresAt) return false;
   return new Date(url.expiresAt) < new Date();
 }
 
-function dbUrlToApi(url: DbUrl): ShortUrl {
+function dbUrlToApi(url: ProjectUrl): ShortUrl {
   return {
     id: url.id,
     shortCode: url.shortCode,
@@ -179,7 +133,7 @@ app.post("/shorten", zValidator("json", CreateUrlSchema), async (c) => {
     ? new Date(Date.now() + expiresIn * 24 * 60 * 60 * 1000)
     : undefined;
 
-  const newUrl: NewDbUrl = {
+  const newUrl: NewProjectUrl = {
     id: crypto.randomUUID(),
     shortCode,
     originalUrl: url,
@@ -187,7 +141,7 @@ app.post("/shorten", zValidator("json", CreateUrlSchema), async (c) => {
     clicks: 0,
   };
 
-  const [created] = await db.insert(urlsTable).values(newUrl).returning();
+  const [created] = await db.insert(projectUrls).values(newUrl).returning();
 
   return c.json(dbUrlToApi(created), 201);
 });
@@ -203,8 +157,8 @@ app.get("/:code", async (c) => {
 
   const [url] = await db
     .select()
-    .from(urlsTable)
-    .where(eq(urlsTable.shortCode, code));
+    .from(projectUrls)
+    .where(eq(projectUrls.shortCode, code));
 
   if (!url) {
     return c.json({ error: "URL not found" }, 404);
@@ -216,12 +170,12 @@ app.get("/:code", async (c) => {
 
   // Increment click count and update last click
   await db
-    .update(urlsTable)
+    .update(projectUrls)
     .set({
       clicks: url.clicks + 1,
       lastClickAt: new Date(),
     })
-    .where(eq(urlsTable.id, url.id));
+    .where(eq(projectUrls.id, url.id));
 
   return c.redirect(url.originalUrl, 302);
 });
@@ -230,15 +184,15 @@ app.get("/:code", async (c) => {
 app.get("/api/urls", zValidator("query", ListUrlsQuerySchema), async (c) => {
   const { includeExpired, sortBy } = c.req.valid("query");
 
-  let query = db.select().from(urlsTable);
+  let query = db.select().from(projectUrls);
 
   // Apply sorting
   if (sortBy === "clicks") {
-    query = query.orderBy(desc(urlsTable.clicks)) as typeof query;
+    query = query.orderBy(desc(projectUrls.clicks)) as typeof query;
   } else if (sortBy === "expires") {
-    query = query.orderBy(asc(urlsTable.expiresAt)) as typeof query;
+    query = query.orderBy(asc(projectUrls.expiresAt)) as typeof query;
   } else {
-    query = query.orderBy(desc(urlsTable.createdAt)) as typeof query;
+    query = query.orderBy(desc(projectUrls.createdAt)) as typeof query;
   }
 
   let urls = await query;
@@ -257,8 +211,8 @@ app.get("/api/urls/:code", async (c) => {
 
   const [url] = await db
     .select()
-    .from(urlsTable)
-    .where(eq(urlsTable.shortCode, code));
+    .from(projectUrls)
+    .where(eq(projectUrls.shortCode, code));
 
   if (!url) {
     return c.json({ error: "URL not found" }, 404);
@@ -273,8 +227,8 @@ app.get("/api/urls/:code/stats", async (c) => {
 
   const [url] = await db
     .select()
-    .from(urlsTable)
-    .where(eq(urlsTable.shortCode, code));
+    .from(projectUrls)
+    .where(eq(projectUrls.shortCode, code));
 
   if (!url) {
     return c.json({ error: "URL not found" }, 404);
@@ -301,14 +255,14 @@ app.patch(
 
     const [url] = await db
       .select()
-      .from(urlsTable)
-      .where(eq(urlsTable.shortCode, code));
+      .from(projectUrls)
+      .where(eq(projectUrls.shortCode, code));
 
     if (!url) {
       return c.json({ error: "URL not found" }, 404);
     }
 
-    const updateData: Partial<NewDbUrl> = {};
+    const updateData: Partial<NewProjectUrl> = {};
     if (expiresIn) {
       updateData.expiresAt = new Date(
         Date.now() + expiresIn * 24 * 60 * 60 * 1000
@@ -316,9 +270,9 @@ app.patch(
     }
 
     const [updated] = await db
-      .update(urlsTable)
+      .update(projectUrls)
       .set(updateData)
-      .where(eq(urlsTable.id, url.id))
+      .where(eq(projectUrls.id, url.id))
       .returning();
 
     return c.json(dbUrlToApi(updated));
@@ -330,8 +284,8 @@ app.delete("/api/urls/:code", async (c) => {
   const code = c.req.param("code");
 
   const [deleted] = await db
-    .delete(urlsTable)
-    .where(eq(urlsTable.shortCode, code))
+    .delete(projectUrls)
+    .where(eq(projectUrls.shortCode, code))
     .returning();
 
   if (!deleted) {
@@ -351,11 +305,8 @@ let passed = 0;
 let failed = 0;
 
 async function resetUrls() {
-  await db.delete(urlsTable);
+  await db.delete(projectUrls);
 }
-
-// Initialize database
-await setupDatabase();
 
 // Test: Create short URL
 await resetUrls();
@@ -472,8 +423,8 @@ if (shortCode) {
   // Verify click was counted
   const [urlInfo] = await db
     .select()
-    .from(urlsTable)
-    .where(eq(urlsTable.shortCode, shortCode));
+    .from(projectUrls)
+    .where(eq(projectUrls.shortCode, shortCode));
   if (urlInfo && urlInfo.clicks === 1) {
     console.log("  Click tracking works");
     passed++;
@@ -526,7 +477,7 @@ if (listRes.status === 200) {
 }
 
 // Test: Get URL info
-const allUrls = await db.select().from(urlsTable);
+const allUrls = await db.select().from(projectUrls);
 const code = allUrls[0]?.shortCode;
 if (code) {
   const infoRes = await app.request(`/api/urls/${code}`);
@@ -601,14 +552,14 @@ if (code) {
 // Test: Expiration
 await resetUrls();
 // Create expired URL directly in database
-const expiredUrl: NewDbUrl = {
+const expiredUrl: NewProjectUrl = {
   id: crypto.randomUUID(),
   shortCode: "expired",
   originalUrl: "https://expired.com",
   expiresAt: new Date(Date.now() - 86400000), // Yesterday
   clicks: 0,
 };
-await db.insert(urlsTable).values(expiredUrl);
+await db.insert(projectUrls).values(expiredUrl);
 
 const expiredRes = await app.request("/expired");
 if (expiredRes.status === 410 || expiredRes.status === 404) {
@@ -624,6 +575,3 @@ console.log(`\n${passed}/${passed + failed} tests passed`);
 if (failed === 0) {
   console.log("\nProject complete! You've built a URL shortener with PostgreSQL!");
 }
-
-// Clean up
-await client.end();
