@@ -7,7 +7,11 @@
     "lesson": "bun lessons/",
     "practice": "bun lessons/practice/",
     "project": "bun lessons/projects/",
-    "test": "bun test"
+    "test": "bun test",
+    "db:generate": "drizzle-kit generate --config=lessons/backend/drizzle.config.ts",
+    "db:push": "drizzle-kit push --config=lessons/backend/drizzle.config.ts",
+    "db:migrate": "drizzle-kit migrate --config=lessons/backend/drizzle.config.ts",
+    "db:studio": "drizzle-kit studio --config=lessons/backend/drizzle.config.ts"
   },
   "dependencies": {
     "@hono/swagger-ui": "^0.5",
