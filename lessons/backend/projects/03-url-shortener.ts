@@ -28,7 +28,7 @@ console.log("PROJECT: URL SHORTENER");
 console.log("========================================\n");
 
 // ============================================================
-// Types and Schemas
+// Types and Schemas (provided)
 // ============================================================
 
 interface ShortUrl {
@@ -65,7 +65,7 @@ const ListUrlsQuerySchema = z.object({
 });
 
 // ============================================================
-// Helper Functions
+// Helper Functions (provided)
 // ============================================================
 
 function generateShortCode(): string {
@@ -109,190 +109,104 @@ function dbUrlToApi(url: ProjectUrl): ShortUrl {
 
 const app = new Hono();
 
-// POST /shorten - Create a short URL
+// ============================================================
+// TODO: Implement API Routes
+// ============================================================
+
+// TODO: POST /shorten - Create a short URL
+// Body: { url, customCode?, expiresIn? }
+// Steps:
+// - Get validated data from c.req.valid("json")
+// - If customCode provided, check availability with isCodeAvailable()
+//   - Return 409 if code already in use
+// - Otherwise, generate unique code with generateShortCode()
+// - Calculate expiresAt if expiresIn provided (days to milliseconds)
+// - Create NewProjectUrl object with crypto.randomUUID() for id
+// - Insert into database with db.insert(projectUrls).values().returning()
+// - Return created URL with dbUrlToApi() and 201 status
 app.post("/shorten", zValidator("json", CreateUrlSchema), async (c) => {
-  const { url, customCode, expiresIn } = c.req.valid("json");
-
-  // Determine short code
-  let shortCode: string;
-  if (customCode) {
-    const available = await isCodeAvailable(customCode);
-    if (!available) {
-      return c.json({ error: "Short code already in use" }, 409);
-    }
-    shortCode = customCode;
-  } else {
-    // Generate unique code
-    do {
-      shortCode = generateShortCode();
-    } while (!(await isCodeAvailable(shortCode)));
-  }
-
-  // Calculate expiration
-  const expiresAt = expiresIn
-    ? new Date(Date.now() + expiresIn * 24 * 60 * 60 * 1000)
-    : undefined;
-
-  const newUrl: NewProjectUrl = {
-    id: crypto.randomUUID(),
-    shortCode,
-    originalUrl: url,
-    expiresAt,
-    clicks: 0,
-  };
-
-  const [created] = await db.insert(projectUrls).values(newUrl).returning();
-
-  return c.json(dbUrlToApi(created), 201);
+  // Your implementation here
+  return c.json({ error: "Not implemented" }, 501);
 });
 
-// GET /:code - Redirect to original URL
+// TODO: GET /:code - Redirect to original URL
+// Steps:
+// - Get code from c.req.param("code")
+// - Skip if code === "api" (return c.notFound())
+// - Query database for URL with matching shortCode
+// - Return 404 if not found
+// - Check if expired with isExpired() - return 410 if expired
+// - Increment clicks and update lastClickAt in database
+// - Return 302 redirect to originalUrl
 app.get("/:code", async (c) => {
-  const code = c.req.param("code");
-
-  // Skip API routes
-  if (code === "api") {
-    return c.notFound();
-  }
-
-  const [url] = await db
-    .select()
-    .from(projectUrls)
-    .where(eq(projectUrls.shortCode, code));
-
-  if (!url) {
-    return c.json({ error: "URL not found" }, 404);
-  }
-
-  if (isExpired(url)) {
-    return c.json({ error: "URL has expired" }, 410);
-  }
-
-  // Increment click count and update last click
-  await db
-    .update(projectUrls)
-    .set({
-      clicks: url.clicks + 1,
-      lastClickAt: new Date(),
-    })
-    .where(eq(projectUrls.id, url.id));
-
-  return c.redirect(url.originalUrl, 302);
+  // Your implementation here
+  return c.json({ error: "Not implemented" }, 501);
 });
 
-// GET /api/urls - List all URLs
+// TODO: GET /api/urls - List all URLs
+// Query params: { includeExpired?, sortBy? }
+// Steps:
+// - Get validated query params from c.req.valid("query")
+// - Build query with db.select().from(projectUrls)
+// - Apply sorting based on sortBy: "clicks" (desc), "expires" (asc), or "created" (desc, default)
+// - Execute query
+// - Filter out expired URLs unless includeExpired is true
+// - Return array mapped through dbUrlToApi()
 app.get("/api/urls", zValidator("query", ListUrlsQuerySchema), async (c) => {
-  const { includeExpired, sortBy } = c.req.valid("query");
-
-  let query = db.select().from(projectUrls);
-
-  // Apply sorting
-  if (sortBy === "clicks") {
-    query = query.orderBy(desc(projectUrls.clicks)) as typeof query;
-  } else if (sortBy === "expires") {
-    query = query.orderBy(asc(projectUrls.expiresAt)) as typeof query;
-  } else {
-    query = query.orderBy(desc(projectUrls.createdAt)) as typeof query;
-  }
-
-  let urls = await query;
-
-  // Filter expired if needed
-  if (!includeExpired) {
-    urls = urls.filter((u) => !isExpired(u));
-  }
-
-  return c.json(urls.map(dbUrlToApi));
+  // Your implementation here
+  return c.json({ error: "Not implemented" }, 501);
 });
 
-// GET /api/urls/:code - Get URL info
+// TODO: GET /api/urls/:code - Get URL info
+// Steps:
+// - Get code from c.req.param("code")
+// - Query database for URL with matching shortCode
+// - Return 404 if not found
+// - Return URL info with dbUrlToApi()
 app.get("/api/urls/:code", async (c) => {
-  const code = c.req.param("code");
-
-  const [url] = await db
-    .select()
-    .from(projectUrls)
-    .where(eq(projectUrls.shortCode, code));
-
-  if (!url) {
-    return c.json({ error: "URL not found" }, 404);
-  }
-
-  return c.json(dbUrlToApi(url));
+  // Your implementation here
+  return c.json({ error: "Not implemented" }, 501);
 });
 
-// GET /api/urls/:code/stats - Get detailed statistics
+// TODO: GET /api/urls/:code/stats - Get detailed statistics
+// Steps:
+// - Get code from c.req.param("code")
+// - Query database for URL with matching shortCode
+// - Return 404 if not found
+// - Return stats object with: shortCode, originalUrl, clicks, createdAt, expiresAt, lastClickAt, isExpired
 app.get("/api/urls/:code/stats", async (c) => {
-  const code = c.req.param("code");
-
-  const [url] = await db
-    .select()
-    .from(projectUrls)
-    .where(eq(projectUrls.shortCode, code));
-
-  if (!url) {
-    return c.json({ error: "URL not found" }, 404);
-  }
-
-  return c.json({
-    shortCode: url.shortCode,
-    originalUrl: url.originalUrl,
-    clicks: url.clicks,
-    createdAt: url.createdAt.toISOString(),
-    expiresAt: url.expiresAt?.toISOString(),
-    lastClickAt: url.lastClickAt?.toISOString(),
-    isExpired: isExpired(url),
-  });
+  // Your implementation here
+  return c.json({ error: "Not implemented" }, 501);
 });
 
-// PATCH /api/urls/:code - Update URL (extend expiration)
+// TODO: PATCH /api/urls/:code - Update URL (extend expiration)
+// Body: { expiresIn? }
+// Steps:
+// - Get code from c.req.param("code")
+// - Get validated body from c.req.valid("json")
+// - Query database for existing URL
+// - Return 404 if not found
+// - Build updateData object with new expiresAt if expiresIn provided
+// - Update database with db.update(projectUrls).set().where().returning()
+// - Return updated URL with dbUrlToApi()
 app.patch(
   "/api/urls/:code",
   zValidator("json", UpdateUrlSchema),
   async (c) => {
-    const code = c.req.param("code");
-    const { expiresIn } = c.req.valid("json");
-
-    const [url] = await db
-      .select()
-      .from(projectUrls)
-      .where(eq(projectUrls.shortCode, code));
-
-    if (!url) {
-      return c.json({ error: "URL not found" }, 404);
-    }
-
-    const updateData: Partial<NewProjectUrl> = {};
-    if (expiresIn) {
-      updateData.expiresAt = new Date(
-        Date.now() + expiresIn * 24 * 60 * 60 * 1000
-      );
-    }
-
-    const [updated] = await db
-      .update(projectUrls)
-      .set(updateData)
-      .where(eq(projectUrls.id, url.id))
-      .returning();
-
-    return c.json(dbUrlToApi(updated));
+    // Your implementation here
+    return c.json({ error: "Not implemented" }, 501);
   }
 );
 
-// DELETE /api/urls/:code - Delete URL
+// TODO: DELETE /api/urls/:code - Delete URL
+// Steps:
+// - Get code from c.req.param("code")
+// - Delete from database with db.delete(projectUrls).where().returning()
+// - Return 404 if nothing was deleted
+// - Return 204 No Content on success
 app.delete("/api/urls/:code", async (c) => {
-  const code = c.req.param("code");
-
-  const [deleted] = await db
-    .delete(projectUrls)
-    .where(eq(projectUrls.shortCode, code))
-    .returning();
-
-  if (!deleted) {
-    return c.json({ error: "URL not found" }, 404);
-  }
-
-  return c.body(null, 204);
+  // Your implementation here
+  return c.json({ error: "Not implemented" }, 501);
 });
 
 // ============================================================
