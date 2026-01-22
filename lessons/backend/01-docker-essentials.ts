@@ -386,3 +386,6 @@ console.log("2. Try running: docker run hello-world");
 console.log("3. Continue to Lesson 2: Docker Compose Setup");
 
 console.log("\n[OK] Lesson 1 Complete! Run: bun lessons/backend/02-docker-compose-setup.ts");
+
+// Export to make this an ES module (fixes IDE warnings about top-level await)
+export {};

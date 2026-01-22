@@ -225,13 +225,16 @@ REDIS CONNECTION:
 +-------------------+------------------------------+
 
 USE IN CODE:
-  // PostgreSQL with Bun
-  const db = Bun.sql({
-    url: "postgresql://learn:learn@localhost:5432/learn_db"
-  });
+  // PostgreSQL with Bun.sql (tagged template literal)
+  // Set DATABASE_URL env var to: postgresql://learn:learn@localhost:5432/learn_db
+  const result = await Bun.sql\`SELECT 1 as connected\`;
 
-  // Redis with Bun
-  const redis = Bun.redis("redis://localhost:6379");
+  // Or use postgres package (recommended with Drizzle ORM):
+  import postgres from "postgres";
+  const sql = postgres("postgresql://learn:learn@localhost:5432/learn_db");
+
+  // Redis connection will be covered in caching lessons
+  // (using packages like ioredis for full Redis support)
 `;
 
 console.log(connectionDetails);
@@ -412,3 +415,6 @@ console.log("2. Verify: docker compose ps");
 console.log("3. Continue to the next lesson to use these databases!");
 
 console.log("\n[OK] Lesson 2 Complete! Your development environment is ready.");
+
+// Export to make this an ES module (fixes IDE warnings about top-level await)
+export {};
