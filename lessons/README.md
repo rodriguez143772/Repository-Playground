@@ -115,3 +115,25 @@ bun lessons/projects/<filename>.ts  # Run a project
 - Hover over types in your editor to see TypeScript's inference
 - Use `console.log(typeof variable)` to check types at runtime
 - Read the error messages carefully - TypeScript errors are helpful!
+
+---
+
+## Phase 2: Backend Fundamentals
+
+Ready for the next phase? Learn backend development with Bun, Hono, and Zod!
+
+**[Continue to Backend Fundamentals →](./backend/README.md)**
+
+### Prerequisites
+- Complete Phase 1 (TypeScript Fundamentals) above
+- Install backend dependencies: `bun add hono @hono/zod-validator @hono/swagger-ui zod`
+
+### What You'll Learn
+- **Bun Runtime** - Fast JavaScript runtime and package manager
+- **Hono Framework** - Lightweight web framework for APIs
+- **Zod Validation** - Type-safe schema validation
+
+```bash
+# Start backend lessons
+bun lessons/backend/01-bun-basics.ts
+```

@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(superpowers:writing-plans)",
+      "Skill(superpowers:subagent-driven-development)",
+      "Bash(git rev-parse:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(bun:*)",
+      "Bash(git mv:*)",
+      "Bash(dir:*)",
+      "Bash(ls \"C:\\\\Users\\\\matth\\\\Repository_Playground\\\\lessons\\\\backend\"\" 2>/dev/null | grep -E \"^0[1-5]- \")",
+      "Bash(ls:*)",
+      "Bash(git rm:*)",
+      "Bash(git diff:*)",
+      "Bash(git -C \"C:/Users/matth/Repository_Playground\" status)",
+      "Bash(git -C \"C:/Users/matth/Repository_Playground\" add lessons/backend/drizzle.config.ts lessons/backend/src/db/index.ts lessons/backend/src/db/schema.ts)",
+      "Bash(git -C \"C:/Users/matth/Repository_Playground\" commit -m \"$\\(cat <<''EOF''\nfeat\\(backend\\): add Drizzle configuration and base schema\n\nAdd shared Drizzle ORM configuration files for database integration:\n- drizzle.config.ts: Configuration for drizzle-kit migrations\n- src/db/index.ts: Database connection setup with postgres.js\n- src/db/schema.ts: Base schema with tasks, urls, users, and posts tables\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
+    ]
+  }
+}

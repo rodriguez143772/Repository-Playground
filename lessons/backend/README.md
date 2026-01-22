@@ -14,16 +14,57 @@ Start the development environment with Docker Compose:
 
 ```bash
 # Start PostgreSQL and Redis containers
+cd lessons/backend
 docker compose up -d
 
 # Verify containers are running
 docker compose ps
 
-# Install dependencies
+# Install dependencies (from project root)
+cd ../..
 bun install
 
 # Run your first lesson
 bun lessons/backend/01-docker-essentials.ts
+```
+
+---
+
+## Database Commands
+
+Drizzle Kit provides commands to manage your database schema. Run these from the **project root**:
+
+| Command | Description |
+|---------|-------------|
+| `bun db:push` | Push schema changes directly to database (development) |
+| `bun db:generate` | Generate SQL migration files from schema changes |
+| `bun db:migrate` | Run pending migrations (production) |
+| `bun db:studio` | Open Drizzle Studio GUI to browse your database |
+
+### When to Use Each
+
+```bash
+# During development - quick iteration
+bun db:push        # Syncs schema.ts → database instantly
+
+# For production - controlled migrations
+bun db:generate    # Creates migration file in /drizzle
+bun db:migrate     # Applies migration files to database
+```
+
+### First Time Setup
+
+Before running any lessons or projects that use the database:
+
+```bash
+# 1. Start Docker containers
+cd lessons/backend && docker compose up -d
+
+# 2. Push the schema to create tables
+cd ../.. && bun db:push
+
+# 3. Now you can run lessons/projects
+bun lessons/backend/17-drizzle-setup.ts
 ```
 
 ---
@@ -122,13 +163,30 @@ bun lessons/backend/practice/05-integration-practice.ts
 
 ## Projects
 
-Apply your backend skills with real-world projects that use the full stack:
+Apply your backend skills with real-world projects that use the full stack.
 
-| # | Project | Skills | Database | Run Command |
-|---|---------|--------|----------|-------------|
-| 01 | [REST API](./projects/01-rest-api.ts) | Hono routes, Zod validation, Drizzle | PostgreSQL | `bun lessons/backend/projects/01-rest-api.ts` |
-| 02 | [File Upload](./projects/02-file-upload.ts) | Bun.file(), streaming, middleware | - | `bun lessons/backend/projects/02-file-upload.ts` |
-| 03 | [URL Shortener](./projects/03-url-shortener.ts) | Full CRUD, validation, persistence | PostgreSQL | `bun lessons/backend/projects/03-url-shortener.ts` |
+### Before Running Projects
+
+```bash
+# 1. Make sure Docker is running
+cd lessons/backend && docker compose up -d
+
+# 2. Push schema to create database tables
+cd ../.. && bun db:push
+
+# 3. Run any project
+bun lessons/backend/projects/01-rest-api.ts
+```
+
+### Available Projects
+
+| # | Project | Skills | Run Command |
+|---|---------|--------|-------------|
+| 01 | [Task Manager API](./projects/01-rest-api.ts) | CRUD, validation, filtering, pagination | `bun lessons/backend/projects/01-rest-api.ts` |
+| 02 | [Contact Book](./projects/02-contact-book.ts) | Relations, search, groups, foreign keys | `bun lessons/backend/projects/02-contact-book.ts` |
+| 03 | [URL Shortener](./projects/03-url-shortener.ts) | Custom codes, redirects, click tracking | `bun lessons/backend/projects/03-url-shortener.ts` |
+
+All projects use PostgreSQL with Drizzle ORM. Each includes a full test suite that runs automatically.
 
 ---
 
@@ -137,12 +195,13 @@ Apply your backend skills with real-world projects that use the full stack:
 ### PostgreSQL
 
 ```
-Host: localhost
-Port: 5432
-Database: devdb
-Username: devuser
-Password: devpass
-Connection URL: postgresql://devuser:devpass@localhost:5432/devdb
+Host:     localhost
+Port:     5432
+Database: learn_db
+Username: learn
+Password: learn
+
+Connection URL: postgresql://learn:learn@localhost:5432/learn_db
 ```
 
 ### Redis
@@ -150,23 +209,25 @@ Connection URL: postgresql://devuser:devpass@localhost:5432/devdb
 ```
 Host: localhost
 Port: 6379
+
 Connection URL: redis://localhost:6379
 ```
 
 ### Connecting in Code
 
 ```typescript
-// PostgreSQL with Drizzle
+// Option 1: Import the shared db instance (recommended for projects)
+import { db } from "./src/db";
+import { users } from "./src/db/schema";
+
+const allUsers = await db.select().from(users);
+
+// Option 2: Create your own connection (for lessons/learning)
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
-const client = postgres("postgresql://devuser:devpass@localhost:5432/devdb");
+const client = postgres("postgresql://learn:learn@localhost:5432/learn_db");
 const db = drizzle(client);
-
-// Redis with Bun
-const redis = new Bun.RedisClient("redis://localhost:6379");
-await redis.set("key", "value");
-const value = await redis.get("key");
 ```
 
 ---
