@@ -109,6 +109,41 @@ export type Post = typeof posts.$inferSelect;
 export type NewPost = typeof posts.$inferInsert;
 
 // ============================================================================
+// PROJECT GROUPS TABLE - For Project 02 (Contact Book)
+// ============================================================================
+
+export const projectGroups = pgTable("project_groups", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 50 }).notNull(),
+  description: varchar("description", { length: 200 }),
+  color: varchar("color", { length: 7 }).notNull().default("#6366f1"), // Hex color for UI
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Type inference helpers for project groups
+export type ProjectGroup = typeof projectGroups.$inferSelect;
+export type NewProjectGroup = typeof projectGroups.$inferInsert;
+
+// ============================================================================
+// PROJECT CONTACTS TABLE - For Project 02 (Contact Book)
+// ============================================================================
+
+export const projectContacts = pgTable("project_contacts", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  email: varchar("email", { length: 255 }),
+  phone: varchar("phone", { length: 20 }),
+  notes: text("notes"),
+  groupId: integer("group_id").references(() => projectGroups.id),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Type inference helpers for project contacts
+export type ProjectContact = typeof projectContacts.$inferSelect;
+export type NewProjectContact = typeof projectContacts.$inferInsert;
+
+// ============================================================================
 // RELATIONS
 // ============================================================================
 
@@ -120,5 +155,16 @@ export const postsRelations = relations(posts, ({ one }) => ({
   author: one(users, {
     fields: [posts.authorId],
     references: [users.id],
+  }),
+}));
+
+export const projectGroupsRelations = relations(projectGroups, ({ many }) => ({
+  contacts: many(projectContacts),
+}));
+
+export const projectContactsRelations = relations(projectContacts, ({ one }) => ({
+  group: one(projectGroups, {
+    fields: [projectContacts.groupId],
+    references: [projectGroups.id],
   }),
 }));
