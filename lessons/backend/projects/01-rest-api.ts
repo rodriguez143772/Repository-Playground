@@ -13,6 +13,14 @@
  *
  * Setup: Run `bun db:push` before running this project
  * Run: bun lessons/backend/projects/01-rest-api.ts
+ *
+ * INSTRUCTIONS:
+ * 1. The Zod schemas and types are provided for you
+ * 2. Implement each route handler marked with TODO
+ * 3. Use the `db` object from "../src/db" for database operations
+ * 4. Use the `projectTasks` table from "../src/db/schema"
+ * 5. Use the `dbTaskToApi` helper to convert database rows to API responses
+ * 6. Run the tests at the bottom to verify your implementation
  */
 
 import { Hono } from "hono";
@@ -92,12 +100,12 @@ function dbTaskToApi(task: ProjectTask): Task {
 }
 
 // ============================================================
-// Create the API
+// TODO: Implement API Routes
 // ============================================================
 
 const app = new Hono();
 
-// Logging middleware
+// Logging middleware (provided - no changes needed)
 app.use("*", async (c, next) => {
   const start = Date.now();
   await next();
@@ -105,195 +113,116 @@ app.use("*", async (c, next) => {
   console.log(`${c.req.method} ${c.req.path} - ${c.res.status} (${ms}ms)`);
 });
 
-// GET /tasks - List all tasks with filtering and pagination
+// TODO: GET /tasks - List all tasks with filtering and pagination
+// Query params: ?status=todo&priority=high&search=keyword&page=1&limit=10
+// Requirements:
+// - Extract page, limit, status, priority, search from validated query params
+// - Build filter conditions using eq(), ilike(), and() from drizzle-orm
+// - If status is provided, filter by status
+// - If priority is provided, filter by priority
+// - If search is provided, filter by title using ilike (case-insensitive)
+// - Order by createdAt descending
+// - Apply pagination with limit and offset
+// - Return: { data: Task[], page, limit }
 app.get("/tasks", zValidator("query", ListTasksQuerySchema), async (c) => {
-  const { page, limit, status, priority, search } = c.req.valid("query");
-  const offset = (page - 1) * limit;
+  // Your implementation here
+  return c.json({ data: [], page: 1, limit: 10 });
+});
 
-  // Build conditions
-  const conditions = [];
-  if (status) {
-    conditions.push(eq(projectTasks.status, status));
-  }
-  if (priority) {
-    conditions.push(eq(projectTasks.priority, priority));
-  }
-  if (search) {
-    conditions.push(ilike(projectTasks.title, `%${search}%`));
-  }
-
-  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
-
-  const tasks = await db
-    .select()
-    .from(projectTasks)
-    .where(whereClause)
-    .orderBy(desc(projectTasks.createdAt))
-    .limit(limit)
-    .offset(offset);
-
+// TODO: GET /tasks/stats - Get task statistics
+// Note: This route must be defined BEFORE /tasks/:id to avoid conflicts
+// Requirements:
+// - Fetch all tasks from the database
+// - Calculate statistics:
+//   - total: total number of tasks
+//   - byStatus: { todo: count, in_progress: count, done: count }
+//   - byPriority: { low: count, medium: count, high: count }
+// - Return the stats object
+app.get("/tasks/stats", async (c) => {
+  // Your implementation here
   return c.json({
-    data: tasks.map(dbTaskToApi),
-    page,
-    limit,
+    total: 0,
+    byStatus: { todo: 0, in_progress: 0, done: 0 },
+    byPriority: { low: 0, medium: 0, high: 0 },
   });
 });
 
-// GET /tasks/stats - Get task statistics (before :id to avoid conflict)
-app.get("/tasks/stats", async (c) => {
-  const allTasks = await db.select().from(projectTasks);
-
-  const stats = {
-    total: allTasks.length,
-    byStatus: {
-      todo: allTasks.filter((t) => t.status === "todo").length,
-      in_progress: allTasks.filter((t) => t.status === "in_progress").length,
-      done: allTasks.filter((t) => t.status === "done").length,
-    },
-    byPriority: {
-      low: allTasks.filter((t) => t.priority === "low").length,
-      medium: allTasks.filter((t) => t.priority === "medium").length,
-      high: allTasks.filter((t) => t.priority === "high").length,
-    },
-  };
-
-  return c.json(stats);
-});
-
-// GET /tasks/:id - Get single task
+// TODO: GET /tasks/:id - Get a single task by ID
+// Requirements:
+// - Parse the id from route params (use parseInt)
+// - Return 400 if id is not a valid number
+// - Query the database for the task with matching id
+// - Return 404 if task not found
+// - Return the task converted with dbTaskToApi()
 app.get("/tasks/:id", async (c) => {
-  const id = parseInt(c.req.param("id"));
-  if (isNaN(id)) {
-    return c.json({ error: "Invalid task ID" }, 400);
-  }
-
-  const [task] = await db
-    .select()
-    .from(projectTasks)
-    .where(eq(projectTasks.id, id));
-
-  if (!task) {
-    return c.json({ error: "Task not found" }, 404);
-  }
-
-  return c.json(dbTaskToApi(task));
+  // Your implementation here
+  return c.json({ error: "Not implemented" }, 501);
 });
 
-// POST /tasks - Create a new task
+// TODO: POST /tasks - Create a new task
+// Body: { title, description?, status?, priority?, dueDate? }
+// Requirements:
+// - Get validated data from c.req.valid("json")
+// - Build insert data object (NewProjectTask type)
+// - Handle dueDate conversion: if provided, convert to Date object
+// - Insert into database and return the created task
+// - Return with 201 status code
 app.post("/tasks", zValidator("json", CreateTaskSchema), async (c) => {
-  const data = c.req.valid("json");
-
-  const insertData: NewProjectTask = {
-    title: data.title,
-    description: data.description,
-    status: data.status,
-    priority: data.priority,
-    dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
-  };
-
-  const [task] = await db.insert(projectTasks).values(insertData).returning();
-
-  return c.json(dbTaskToApi(task), 201);
+  // Your implementation here
+  return c.json({ error: "Not implemented" }, 501);
 });
 
-// PUT /tasks/:id - Update a task
+// TODO: PUT /tasks/:id - Update a task (full update)
+// Body: { title?, description?, status?, priority?, dueDate? }
+// Requirements:
+// - Parse and validate the id from route params
+// - Return 400 if id is not a valid number
+// - Check if task exists, return 404 if not found
+// - Build update data object with updatedAt set to new Date()
+// - Only include fields that are provided in the request
+// - Handle dueDate: can be a string (convert to Date) or null (clear it)
+// - Update the task and return the updated task
 app.put("/tasks/:id", zValidator("json", UpdateTaskSchema), async (c) => {
-  const id = parseInt(c.req.param("id"));
-  if (isNaN(id)) {
-    return c.json({ error: "Invalid task ID" }, 400);
-  }
-
-  const data = c.req.valid("json");
-
-  // Check if task exists
-  const [existing] = await db
-    .select()
-    .from(projectTasks)
-    .where(eq(projectTasks.id, id));
-
-  if (!existing) {
-    return c.json({ error: "Task not found" }, 404);
-  }
-
-  const updateData: Partial<NewProjectTask> = {
-    updatedAt: new Date(),
-  };
-
-  if (data.title !== undefined) updateData.title = data.title;
-  if (data.description !== undefined) updateData.description = data.description;
-  if (data.status !== undefined) updateData.status = data.status;
-  if (data.priority !== undefined) updateData.priority = data.priority;
-  if (data.dueDate !== undefined) {
-    updateData.dueDate = data.dueDate ? new Date(data.dueDate) : null;
-  }
-
-  const [task] = await db
-    .update(projectTasks)
-    .set(updateData)
-    .where(eq(projectTasks.id, id))
-    .returning();
-
-  return c.json(dbTaskToApi(task));
+  // Your implementation here
+  return c.json({ error: "Not implemented" }, 501);
 });
 
-// PATCH /tasks/:id/status - Update task status only
+// TODO: PATCH /tasks/:id/status - Update task status only
+// Body: { status: "todo" | "in_progress" | "done" }
+// Requirements:
+// - Parse and validate the id from route params
+// - Return 400 if id is not a valid number
+// - Check if task exists, return 404 if not found
+// - Update only status and updatedAt fields
+// - Return the updated task
 app.patch(
   "/tasks/:id/status",
   zValidator("json", UpdateStatusSchema),
   async (c) => {
-    const id = parseInt(c.req.param("id"));
-    if (isNaN(id)) {
-      return c.json({ error: "Invalid task ID" }, 400);
-    }
-
-    const { status } = c.req.valid("json");
-
-    // Check if task exists
-    const [existing] = await db
-      .select()
-      .from(projectTasks)
-      .where(eq(projectTasks.id, id));
-
-    if (!existing) {
-      return c.json({ error: "Task not found" }, 404);
-    }
-
-    const [task] = await db
-      .update(projectTasks)
-      .set({ status, updatedAt: new Date() })
-      .where(eq(projectTasks.id, id))
-      .returning();
-
-    return c.json(dbTaskToApi(task));
+    // Your implementation here
+    return c.json({ error: "Not implemented" }, 501);
   }
 );
 
-// DELETE /tasks/:id - Delete a task
+// TODO: DELETE /tasks/:id - Delete a task
+// Requirements:
+// - Parse and validate the id from route params
+// - Return 400 if id is not a valid number
+// - Delete the task and check if it was found (use .returning())
+// - Return 404 if task was not found
+// - Return 204 (no content) on successful deletion
 app.delete("/tasks/:id", async (c) => {
-  const id = parseInt(c.req.param("id"));
-  if (isNaN(id)) {
-    return c.json({ error: "Invalid task ID" }, 400);
-  }
-
-  const [deleted] = await db
-    .delete(projectTasks)
-    .where(eq(projectTasks.id, id))
-    .returning();
-
-  if (!deleted) {
-    return c.json({ error: "Task not found" }, 404);
-  }
-
-  return c.body(null, 204);
+  // Your implementation here
+  return c.json({ error: "Not implemented" }, 501);
 });
 
-// Error handler
+// Error handler (provided - no changes needed)
 app.onError((err, c) => {
   console.error("Error:", err);
   return c.json({ error: "Internal server error" }, 500);
 });
 
-// 404 handler
+// 404 handler (provided - no changes needed)
 app.notFound((c) => {
   return c.json({ error: "Not found" }, 404);
 });
