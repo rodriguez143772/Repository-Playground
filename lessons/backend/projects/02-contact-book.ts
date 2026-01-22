@@ -146,295 +146,108 @@ app.use("*", async (c, next) => {
 });
 
 // ============================================================
-// GROUP ROUTES
+// TODO: Implement Group Routes
 // ============================================================
 
-// GET /groups - List all groups
+// TODO: GET /groups - List all groups
+// Return: Array of groups ordered by createdAt descending
+// Use: dbGroupToApi() to convert database rows to API format
 app.get("/groups", async (c) => {
-  const groups = await db
-    .select()
-    .from(projectGroups)
-    .orderBy(desc(projectGroups.createdAt));
-
-  return c.json(groups.map(dbGroupToApi));
+  // Your implementation here
+  return c.json([]);
 });
 
-// POST /groups - Create a new group
+// TODO: POST /groups - Create a new group
+// Body: { name, description?, color? }
+// Return: Created group with 201 status
+// Use: dbGroupToApi() to convert database row to API format
 app.post("/groups", zValidator("json", CreateGroupSchema), async (c) => {
-  const data = c.req.valid("json");
-
-  const insertData: NewProjectGroup = {
-    name: data.name,
-    description: data.description,
-    color: data.color,
-  };
-
-  const [group] = await db.insert(projectGroups).values(insertData).returning();
-
-  return c.json(dbGroupToApi(group), 201);
+  // Your implementation here
+  // Hint: Use c.req.valid("json") to get validated data
+  return c.json({ error: "Not implemented" }, 501);
 });
 
-// GET /groups/:id - Get single group with contact count
+// TODO: GET /groups/:id - Get single group with contact count
+// Return: Group object with contactCount field
+// Error: 400 for invalid ID, 404 for not found
+// Hint: Parse ID with parseInt(c.req.param("id"))
+// Hint: Use count() from drizzle-orm to count contacts in the group
 app.get("/groups/:id", async (c) => {
-  const id = parseInt(c.req.param("id"));
-  if (isNaN(id)) {
-    return c.json({ error: "Invalid group ID" }, 400);
-  }
-
-  const [group] = await db
-    .select()
-    .from(projectGroups)
-    .where(eq(projectGroups.id, id));
-
-  if (!group) {
-    return c.json({ error: "Group not found" }, 404);
-  }
-
-  // Get contact count for this group
-  const [result] = await db
-    .select({ count: count() })
-    .from(projectContacts)
-    .where(eq(projectContacts.groupId, id));
-
-  return c.json({
-    ...dbGroupToApi(group),
-    contactCount: result?.count ?? 0,
-  });
+  // Your implementation here
+  return c.json({ error: "Not implemented" }, 501);
 });
 
-// PUT /groups/:id - Update a group
+// TODO: PUT /groups/:id - Update a group
+// Body: { name?, description?, color? }
+// Return: Updated group
+// Error: 400 for invalid ID, 404 for not found
+// Hint: Check if group exists before updating
 app.put("/groups/:id", zValidator("json", UpdateGroupSchema), async (c) => {
-  const id = parseInt(c.req.param("id"));
-  if (isNaN(id)) {
-    return c.json({ error: "Invalid group ID" }, 400);
-  }
-
-  const data = c.req.valid("json");
-
-  // Check if group exists
-  const [existing] = await db
-    .select()
-    .from(projectGroups)
-    .where(eq(projectGroups.id, id));
-
-  if (!existing) {
-    return c.json({ error: "Group not found" }, 404);
-  }
-
-  const updateData: Partial<NewProjectGroup> = {};
-  if (data.name !== undefined) updateData.name = data.name;
-  if (data.description !== undefined) updateData.description = data.description;
-  if (data.color !== undefined) updateData.color = data.color;
-
-  const [group] = await db
-    .update(projectGroups)
-    .set(updateData)
-    .where(eq(projectGroups.id, id))
-    .returning();
-
-  return c.json(dbGroupToApi(group));
+  // Your implementation here
+  return c.json({ error: "Not implemented" }, 501);
 });
 
-// DELETE /groups/:id - Delete a group (only if no contacts)
+// TODO: DELETE /groups/:id - Delete a group (only if no contacts)
+// Return: 204 No Content on success
+// Error: 400 for invalid ID, 404 for not found
+// Error: 409 if group has contacts (cannot delete)
+// Hint: Check contact count before deleting
 app.delete("/groups/:id", async (c) => {
-  const id = parseInt(c.req.param("id"));
-  if (isNaN(id)) {
-    return c.json({ error: "Invalid group ID" }, 400);
-  }
-
-  // Check if group has contacts
-  const [result] = await db
-    .select({ count: count() })
-    .from(projectContacts)
-    .where(eq(projectContacts.groupId, id));
-
-  if (result && result.count > 0) {
-    return c.json(
-      { error: "Cannot delete group with contacts. Move or delete contacts first." },
-      409
-    );
-  }
-
-  const [deleted] = await db
-    .delete(projectGroups)
-    .where(eq(projectGroups.id, id))
-    .returning();
-
-  if (!deleted) {
-    return c.json({ error: "Group not found" }, 404);
-  }
-
-  return c.body(null, 204);
+  // Your implementation here
+  return c.json({ error: "Not implemented" }, 501);
 });
 
 // ============================================================
-// CONTACT ROUTES
+// TODO: Implement Contact Routes
 // ============================================================
 
-// GET /contacts - List contacts with filtering and pagination
+// TODO: GET /contacts - List contacts with filtering and pagination
+// Query params: ?groupId=1&search=john&page=1&limit=10
+// Return: { data: Contact[], page, limit }
+// Hint: Use c.req.valid("query") to get validated query params
+// Hint: Build conditions array and use and(...conditions) for WHERE clause
+// Hint: Use ilike() for case-insensitive search on name and email
 app.get("/contacts", zValidator("query", ListContactsQuerySchema), async (c) => {
-  const { page, limit, groupId, search } = c.req.valid("query");
-  const offset = (page - 1) * limit;
-
-  // Build conditions
-  const conditions = [];
-  if (groupId !== undefined) {
-    conditions.push(eq(projectContacts.groupId, groupId));
-  }
-  if (search) {
-    conditions.push(
-      or(
-        ilike(projectContacts.name, `%${search}%`),
-        ilike(projectContacts.email, `%${search}%`)
-      )
-    );
-  }
-
-  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
-
-  const contacts = await db
-    .select()
-    .from(projectContacts)
-    .where(whereClause)
-    .orderBy(desc(projectContacts.createdAt))
-    .limit(limit)
-    .offset(offset);
-
-  return c.json({
-    data: contacts.map(dbContactToApi),
-    page,
-    limit,
-  });
+  // Your implementation here
+  return c.json({ data: [], page: 1, limit: 10 });
 });
 
-// POST /contacts - Create a new contact
+// TODO: POST /contacts - Create a new contact
+// Body: { name, email?, phone?, notes?, groupId? }
+// Return: Created contact with 201 status
+// Error: 400 if groupId is provided but group doesn't exist
+// Hint: Validate group exists before creating contact
 app.post("/contacts", zValidator("json", CreateContactSchema), async (c) => {
-  const data = c.req.valid("json");
-
-  // If groupId provided, verify group exists
-  if (data.groupId) {
-    const [group] = await db
-      .select()
-      .from(projectGroups)
-      .where(eq(projectGroups.id, data.groupId));
-
-    if (!group) {
-      return c.json({ error: "Group not found" }, 400);
-    }
-  }
-
-  const insertData: NewProjectContact = {
-    name: data.name,
-    email: data.email,
-    phone: data.phone,
-    notes: data.notes,
-    groupId: data.groupId,
-  };
-
-  const [contact] = await db.insert(projectContacts).values(insertData).returning();
-
-  return c.json(dbContactToApi(contact), 201);
+  // Your implementation here
+  return c.json({ error: "Not implemented" }, 501);
 });
 
-// GET /contacts/:id - Get single contact with group info
+// TODO: GET /contacts/:id - Get single contact with group info
+// Return: Contact object with group field (null if no group)
+// Error: 400 for invalid ID, 404 for not found
+// Hint: Fetch contact, then fetch group if contact has groupId
 app.get("/contacts/:id", async (c) => {
-  const id = parseInt(c.req.param("id"));
-  if (isNaN(id)) {
-    return c.json({ error: "Invalid contact ID" }, 400);
-  }
-
-  const [contact] = await db
-    .select()
-    .from(projectContacts)
-    .where(eq(projectContacts.id, id));
-
-  if (!contact) {
-    return c.json({ error: "Contact not found" }, 404);
-  }
-
-  // Get group info if contact has a group
-  let group: ProjectGroup | null = null;
-  if (contact.groupId) {
-    const [groupResult] = await db
-      .select()
-      .from(projectGroups)
-      .where(eq(projectGroups.id, contact.groupId));
-    group = groupResult || null;
-  }
-
-  return c.json({
-    ...dbContactToApi(contact),
-    group: group ? dbGroupToApi(group) : null,
-  });
+  // Your implementation here
+  return c.json({ error: "Not implemented" }, 501);
 });
 
-// PUT /contacts/:id - Update a contact
+// TODO: PUT /contacts/:id - Update a contact
+// Body: { name?, email?, phone?, notes?, groupId? }
+// Return: Updated contact
+// Error: 400 for invalid ID or invalid groupId, 404 for not found
+// Hint: Check contact exists, validate group if groupId provided
+// Hint: Set updatedAt to new Date() when updating
 app.put("/contacts/:id", zValidator("json", UpdateContactSchema), async (c) => {
-  const id = parseInt(c.req.param("id"));
-  if (isNaN(id)) {
-    return c.json({ error: "Invalid contact ID" }, 400);
-  }
-
-  const data = c.req.valid("json");
-
-  // Check if contact exists
-  const [existing] = await db
-    .select()
-    .from(projectContacts)
-    .where(eq(projectContacts.id, id));
-
-  if (!existing) {
-    return c.json({ error: "Contact not found" }, 404);
-  }
-
-  // If groupId provided, verify group exists
-  if (data.groupId !== undefined && data.groupId !== null) {
-    const [group] = await db
-      .select()
-      .from(projectGroups)
-      .where(eq(projectGroups.id, data.groupId));
-
-    if (!group) {
-      return c.json({ error: "Group not found" }, 400);
-    }
-  }
-
-  const updateData: Partial<NewProjectContact> = {
-    updatedAt: new Date(),
-  };
-
-  if (data.name !== undefined) updateData.name = data.name;
-  if (data.email !== undefined) updateData.email = data.email;
-  if (data.phone !== undefined) updateData.phone = data.phone;
-  if (data.notes !== undefined) updateData.notes = data.notes;
-  if (data.groupId !== undefined) updateData.groupId = data.groupId;
-
-  const [contact] = await db
-    .update(projectContacts)
-    .set(updateData)
-    .where(eq(projectContacts.id, id))
-    .returning();
-
-  return c.json(dbContactToApi(contact));
+  // Your implementation here
+  return c.json({ error: "Not implemented" }, 501);
 });
 
-// DELETE /contacts/:id - Delete a contact
+// TODO: DELETE /contacts/:id - Delete a contact
+// Return: 204 No Content on success
+// Error: 400 for invalid ID, 404 for not found
 app.delete("/contacts/:id", async (c) => {
-  const id = parseInt(c.req.param("id"));
-  if (isNaN(id)) {
-    return c.json({ error: "Invalid contact ID" }, 400);
-  }
-
-  const [deleted] = await db
-    .delete(projectContacts)
-    .where(eq(projectContacts.id, id))
-    .returning();
-
-  if (!deleted) {
-    return c.json({ error: "Contact not found" }, 404);
-  }
-
-  return c.body(null, 204);
+  // Your implementation here
+  return c.json({ error: "Not implemented" }, 501);
 });
 
 // Error handler
