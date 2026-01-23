@@ -27,8 +27,8 @@
 // 1 kilogram = 2.20462 pounds
 // Celsius to Fahrenheit: (C × 9/5) + 32
 
-const KM_TO_MILES: number = 0;  // Fix this
-const KG_TO_POUNDS: number = 0;  // Fix this
+const KM_TO_MILES: number = 0.621371;  // Fix this
+const KG_TO_POUNDS: number = 2.20462;  // Fix this
 
 // ============================================================
 // CONVERSION FUNCTIONS (as simple expressions for now)
@@ -41,14 +41,14 @@ const temperatureInCelsius: number = 25;
 const weightInKg: number = 75;
 
 // TODO: Calculate the converted values
-const distanceInMiles: number = 0;  // Convert distanceInKm to miles
-const temperatureInFahrenheit: number = 0;  // Convert temperatureInCelsius to Fahrenheit
-const weightInPounds: number = 0;  // Convert weightInKg to pounds
+const distanceInMiles: number = distanceInKm * KM_TO_MILES;  // Convert distanceInKm to miles
+const temperatureInFahrenheit: number = (temperatureInCelsius * 9/5) + 32;  // Convert temperatureInCelsius to Fahrenheit
+const weightInPounds: number = weightInKg * KG_TO_POUNDS;  // Convert weightInKg to pounds
 
 // TODO: Create formatted output strings using template literals
-const distanceOutput: string = "";  // Should be like "100 km = 62.14 miles"
-const temperatureOutput: string = "";  // Should be like "25°C = 77°F"
-const weightOutput: string = "";  // Should be like "75 kg = 165.35 lbs"
+const distanceOutput: string = `${distanceInKm} km = ${distanceInMiles} miles`;  // Should be like "100 km = 62.14 miles"
+const temperatureOutput: string = `${temperatureInCelsius}°c = ${temperatureInFahrenheit}°F`;  // Should be like "25°C = 77°F"
+const weightOutput: string = `${weightInKg} kg = ${weightInPounds} lbs`;  // Should be like "75 kg = 165.35 lbs"
 
 // ============================================================
 // BONUS CHALLENGE: Reverse Conversions
@@ -60,9 +60,9 @@ const fahrenheitInput: number = 98.6;
 const poundsInput: number = 150;
 
 // Calculate reverse conversions
-const milesToKm: number = 0;  // Convert miles to km
-const fahrenheitToCelsius: number = 0;  // Convert F to C
-const poundsToKg: number = 0;  // Convert pounds to kg
+const milesToKm: number = milesInput * 1.60934;  // Convert miles to km
+const fahrenheitToCelsius: number = (fahrenheitInput - 32)*5/9;  // Convert F to C
+const poundsToKg: number = poundsInput * (1 + KG_TO_POUNDS);  // Convert pounds to kg
 
 // ============================================================
 // DISPLAY RESULTS
