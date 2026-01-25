@@ -16,12 +16,14 @@
  * - Ternary operator
  */
 
+import { number } from "zod/v4";
+
 // ============================================================
 // BILL INFORMATION
 // ============================================================
 
 const billAmount: number = 84.50;
-const tipPercentage: number = 18;  // 18%
+const tipPercentage: number = .18;  // 18%
 const numberOfPeople: number = 4;
 
 // ============================================================
@@ -29,14 +31,14 @@ const numberOfPeople: number = 4;
 // ============================================================
 
 // TODO: Calculate the tip amount
-const tipAmount: number = 0;
+const tipAmount: number = billAmount * tipPercentage;
 
 // TODO: Calculate the total (bill + tip)
-const totalAmount: number = 0;
+const totalAmount: number = tipAmount + billAmount;
 
 // TODO: Calculate per-person amounts
-const tipPerPerson: number = 0;
-const totalPerPerson: number = 0;
+const tipPerPerson: number = tipAmount/numberOfPeople;
+const totalPerPerson: number = (totalAmount/numberOfPeople);
 
 // ============================================================
 // TODO: Service Quality Ratings
@@ -45,11 +47,11 @@ const totalPerPerson: number = 0;
 // Different tip percentages based on service:
 // Poor: 10%, Fair: 15%, Good: 18%, Excellent: 20%, Outstanding: 25%
 
-const poorTip: number = 0;      // Calculate for poor service
-const fairTip: number = 0;      // Calculate for fair service
-const goodTip: number = 0;      // Calculate for good service
-const excellentTip: number = 0; // Calculate for excellent service
-const outstandingTip: number = 0; // Calculate for outstanding service
+const poorTip: number = billAmount * 0.10;      // Calculate for poor service
+const fairTip: number = billAmount * .15;      // Calculate for fair service
+const goodTip: number = billAmount * .18;      // Calculate for good service
+const excellentTip: number = billAmount * .20; // Calculate for excellent service
+const outstandingTip: number = billAmount * .25; // Calculate for outstanding service
 
 // ============================================================
 // TODO: Quick Tip Suggestions
@@ -57,26 +59,30 @@ const outstandingTip: number = 0; // Calculate for outstanding service
 
 // Round up total to nearest dollar for easy payment
 // Hint: Use Math.ceil()
-const roundedTotal: number = 0;
+const roundedTotal: number = Math.ceil(totalAmount);
 
 // Calculate what tip percentage that rounded total represents
-const roundedTipPercentage: number = 0;
+const roundedTipPercentage: number = 0; 
+// ??????? what is this asking from me?
+// ??????? what is this asking from me?
+// ??????? what is this asking from me?
+// ??????? what is this asking from me?
 
 // ============================================================
 // TODO: Comparison Operations
 // ============================================================
 
 // Is the tip more than $15?
-const isGenerousTip: boolean = false;
+const isGenerousTip: boolean = tipAmount >= 15;
 
 // Is splitting more than 2 ways?
-const isGroupDining: boolean = false;
+const isGroupDining: boolean = numberOfPeople > 2 ? true : false;
 
 // Would each person pay less than $30?
-const isAffordable: boolean = false;
+const isAffordable: boolean = totalPerPerson < 30 ? true : false;
 
 // Quick tip summary using ternary
-const tipSummary: string = "";  // "Generous tip!" if > 15%, otherwise "Standard tip"
+const tipSummary: string = tipPercentage >= .15 ? `Generous tip!` : `Standard tip`;  // "Generous tip!" if > 15%, otherwise "Standard tip"
 
 // ============================================================
 // DISPLAY RESULTS
