@@ -318,6 +318,7 @@ if(artScore >= passingScore) {
 } 
 else {
   artPassing = false;
+  failingCount++;
 }
 
 
@@ -326,7 +327,7 @@ else {
 
 
 // TODO: Overall pass (all subjects passing) or fail
-const overallPassing: boolean = passingCount <= 0 ? true : false;
+const overallPassing: boolean = failingCount === 0;
 // ============================================================
 // TODO: Academic Standing (use switch)
 // ============================================================
@@ -340,18 +341,66 @@ const overallPassing: boolean = passingCount <= 0 ? true : false;
  * 0-0.99: "Academic Probation"
  */
 
+let academicStanding: string;
+  if(gpa >= 3.5){
+    academicStanding = "Dean's List";
+  }
+  else if(gpa >= 3.0 && gpa < 3.5){
+    academicStanding = "Good Standing";
+  }
+  else if(gpa >= 2.0 && gpa < 3.0){
+    academicStanding = "Satisfactory";
+  }
+  else if(gpa >= 1.0 && gpa < 2.0){
+    academicStanding = "Academic Warning";
+  }
+  else{
+    academicStanding = "Academic Probation";
+  }
 // TODO: Determine academic standing
-let academicStanding: string = "";
+
+
 
 // ============================================================
 // TODO: Performance Feedback
 // ============================================================
 
 // TODO: Find the highest and lowest scores
-let highestScore: number = 0;
-let lowestScore: number = 0;
-let highestSubject: string = "";
-let lowestSubject: string = "";
+let highestScore: number = Math.max(mathScore,historyScore,scienceScore,englishScore,artScore);
+let lowestScore: number = Math.min(mathScore,historyScore,scienceScore,englishScore,artScore);
+
+let highestSubject: string;
+
+if (highestScore === mathScore) {
+  highestSubject = "Math";
+} else if (highestScore === historyScore) {
+  highestSubject = "History";
+} else if (highestScore === scienceScore) {
+  highestSubject = "Science";
+} else if (highestScore === englishScore) {
+  highestSubject = "English";
+} else if (highestScore === artScore) {
+  highestSubject = "Art";
+} else {
+  highestSubject = "Invalid";
+}
+
+let lowestSubject: string;
+
+if (lowestScore === mathScore) {
+  lowestSubject = "Math";
+} else if (lowestScore === historyScore) {
+  lowestSubject = "History";
+} else if (lowestScore === scienceScore) {
+  lowestSubject = "Science";
+} else if (lowestScore === englishScore) {
+  lowestSubject = "English";
+} else if (lowestScore === artScore) {
+  lowestSubject = "Art";
+} else {
+  lowestSubject = "Invalid";
+}
+
 
 // TODO: Generate personalized feedback
 let feedback: string = "";

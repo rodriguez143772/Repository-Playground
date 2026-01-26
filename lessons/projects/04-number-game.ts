@@ -17,6 +17,8 @@
  * - Random number generation
  */
 
+import { number } from "zod/v4";
+
 // ============================================================
 // GAME CONFIGURATION
 // ============================================================
@@ -54,17 +56,34 @@ const guessHistory: string[] = [];  // Store formatted guess results
  * 3. Add to history with hint ("too low", "too high", or "correct!")
  * 4. If correct, set gameWon and break
  */
+  for(let i = 0; i < playerGuesses.length; i++){
+    let guess = playerGuesses[i];
+
+    if(guess === targetNumber){
+      attemptsUsed++;
+      gameWon = true;
+      guessHistory[i] = "correct!";
+      break;
+    }
+    else if(guess < targetNumber){
+      attemptsUsed++;
+      guessHistory[i] = "too low"
+    }
+    else if(guess > targetNumber){
+      attemptsUsed++;
+      guessHistory[i] = "too high"
+
+    }
+    else {
+      attemptsUsed++;
+      guessHistory[i] = "Unknown"
+
+    }
+
+    }
 
 // TODO: Implement the game loop
-for (let i = 0; i < playerGuesses.length; i++) {
-  const guess = playerGuesses[i];
-  
-  // TODO: Process this guess
-  // - Compare guess to targetNumber
-  // - Create hint string
-  // - Add to guessHistory
-  // - Check if won
-}
+
 
 // ============================================================
 // TODO: Calculate Score
@@ -79,6 +98,20 @@ for (let i = 0; i < playerGuesses.length; i++) {
  */
 
 let score: number = 0;
+let penalty: number = (playerGuesses.length * 100);
+  
+    if(gameWon == false){
+      score = 0;
+    } 
+    if(gameWon == true){
+      if(playerGuesses.length <= 3){
+        score += 200;
+      }
+      score -= penalty;
+    }
+
+
+
 // TODO: Calculate the score based on attempts and whether game was won
 
 // ============================================================
@@ -87,14 +120,67 @@ let score: number = 0;
 
 // TODO: Find the closest guess that wasn't correct
 let closestGuess: number = 0;
+let currGuess: number = Infinity;
 let closestDifference: number = Infinity;
+
+for (let i = 0; i < playerGuesses.length; i++){
+  currGuess = playerGuesses[i];
+  let distFromGuess: number = Math.abs(targetNumber - currGuess); 
+  if(distFromGuess < closestGuess){
+
+    closestGuess = currGuess;
+    closestDifference = distFromGuess;
+  
+  }
+}
+
+
 
 // TODO: Count how many guesses were too low vs too high
 let tooLowCount: number = 0;
 let tooHighCount: number = 0;
 
+for (let i = 0; i < playerGuesses.length; i++){
+  let currGuess: number = playerGuesses[i]; 
+  if(currGuess === targetNumber){
+    break;
+  }
+  if(currGuess < targetNumber){
+    tooLowCount += 1;
+  }
+  if(currGuess > targetNumber){
+    tooHighCount += 1;
+  }
+}
+
 // TODO: Calculate average guess
-let averageGuess: number = 0;
+let averageGuess: number = NaN;
+let sumOfGuess: number = 0;
+let attemptsToWin: number;
+
+
+if(!gameWon){
+  for(let i = 0; i < playerGuesses.length; i++){
+    let currGuess: number = playerGuesses[i];
+    sumOfGuess += currGuess;
+  }
+  averageGuess = sumOfGuess / playerGuesses.length;
+}
+
+if(gameWon){
+
+  for(let i = 0; i < playerGuesses.length; i++){
+    if(playerGuesses[i] === winningGuess){
+      break;
+    }
+  }
+  for(let i = 0; i < attemptsToWin; i++){
+    let currGuess: number = playerGuesses[i];
+    sumOfGuess += currGuess;
+  }
+  averageGuess = sumOfGuess/attemptsToWin;
+}
+
 
 // ============================================================
 // TODO: Generate Hint Messages
@@ -120,6 +206,30 @@ let hintMessage: string = "";
  */
 
 let performanceRating: string = "";
+
+switch(playerGuesses.length){
+  case 1:
+  case 2:
+  case 3:  
+    performanceRating = "🌟 Psychic!";
+    break; 
+  case 4:
+  case 5: 
+    performanceRating = "🎯 Sharp shooter!"
+    break;
+  case 6:
+  case 7:
+    performanceRating = "👍 Good job!"
+    break;
+  case 8:
+  case 9:
+  case 10:
+    performanceRating = "😅 Close call!"
+    break;
+  default: 
+    performanceRating = "💪 Try again!"
+}
+
 // TODO: Determine rating
 
 // ============================================================
@@ -241,3 +351,5 @@ console.log(`\n${passed}/${passed + failed} tests passed`);
 if (failed === 0) {
   console.log("\n🎉 Project complete! You're a game developer now!");
 }
+
+console.log(`Did Game Win: ${gameWon}`);
