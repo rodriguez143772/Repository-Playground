@@ -25,10 +25,16 @@ console.log("========================================\n");
  */
 
 async function readJsonFile<T>(path: string, defaultValue: T): Promise<T> {
-  // TODO: Implement using Bun.file()
-  // Hint: Check if file exists with file.exists()
-  // Hint: Parse JSON with file.json()
-  return defaultValue;
+
+  const file = Bun.file("package.json");
+  if(await file.exists()){
+    const contents = file.json();
+    return contents
+  }
+  else{
+    return defaultValue;
+  }
+  
 }
 
 // ============================================================
@@ -40,30 +46,37 @@ async function readJsonFile<T>(path: string, defaultValue: T): Promise<T> {
  */
 
 async function writeJsonFile(path: string, data: unknown): Promise<void> {
-  // TODO: Implement using Bun.write()
-  // Hint: Use JSON.stringify(data, null, 2) for pretty formatting
+
+  const testFilePath = path
+  const dataToWrite = { data };
+  Bun.write(testFilePath, JSON.stringify(dataToWrite, null, 2)); 
+  
 }
 
 // ============================================================
 // PROBLEM 3: Hash Password
 // ============================================================
 
-/**
- * Hash a password using Bun's built-in password hashing.
- */
 
 async function hashPassword(password: string): Promise<string> {
   // TODO: Implement using Bun.password.hash()
-  return "";
+  const HashedPassword = await Bun.password.hash(password);
+  return HashedPassword;
 }
 
-/**
- * Verify a password against a hash.
- */
+
 
 async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  // TODO: Implement using Bun.password.verify()
-  return false;
+
+
+  const isVerified = await Bun.password.verify(password, hash)
+  if(isVerified){
+    return true;
+  }
+  else{
+    return false;  
+  }
+  
 }
 
 // ============================================================
@@ -75,8 +88,9 @@ async function verifyPassword(password: string, hash: string): Promise<boolean> 
  */
 
 function generateId(): string {
-  // TODO: Implement using crypto.randomUUID()
-  return "";
+
+  const UUID = crypto.randomUUID();
+  return UUID;
 }
 
 // ============================================================
@@ -91,8 +105,19 @@ function generateId(): string {
 async function measureTime<T>(fn: () => Promise<T>): Promise<{ result: T; durationMs: number }> {
   // TODO: Implement using Bun.nanoseconds()
   // Hint: Take time before and after calling fn()
+  const start: number = Bun.nanoseconds();
+
+  Bun.sleep(100);
+
+  const end: number = Bun.nanoseconds();
+
   const result = await fn();
   return { result, durationMs: 0 };
+
+  // note from LR: might need to do some research about Promise
+  //
+  //
+  //
 }
 
 // ============================================================
@@ -104,7 +129,7 @@ async function measureTime<T>(fn: () => Promise<T>): Promise<{ result: T; durati
  * If the command fails, return null.
  */
 
-import { $ } from "bun";
+import { $, file } from "bun";
 
 async function runCommand(command: string): Promise<string | null> {
   // TODO: Implement using Bun.$

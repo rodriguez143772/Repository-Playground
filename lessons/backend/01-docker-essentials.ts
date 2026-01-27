@@ -180,7 +180,8 @@ console.log("\n--- Port Mapping ---");
  * - Now localhost:5432 reaches PostgreSQL
  */
 
-const portMapping = `
+const portMapping = 
+`
 Your Machine (Host)              Container
 +-------------------+           +-------------------+
 |                   |           |                   |

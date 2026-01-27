@@ -27,6 +27,7 @@ const scienceScore: number = 92;
 const englishScore: number = 78;
 const historyScore: number = 88;
 const artScore: number = 95;
+const numberOfClasses: number = 5;
 
 const passingScore: number = 60;
 
@@ -44,50 +45,289 @@ const passingScore: number = 60;
  */
 
 // TODO: Use if/else to convert each score to a letter grade
-let mathGrade: string = "";
-let scienceGrade: string = "";
-let englishGrade: string = "";
-let historyGrade: string = "";
-let artGrade: string = "";
+let mathGrade: string;
+let scienceGrade: string;
+let englishGrade: string;
+let historyGrade: string;
+let artGrade: string;
+
+if(mathScore >= 90 && mathScore <= 100){
+  mathGrade = "A";
+} else if (mathScore >= 80){
+  mathGrade = "B" 
+} else if (mathScore >= 70){
+  mathGrade = "C" 
+} else if (mathScore >= 60){
+  mathGrade = "D" 
+} else if (mathScore < 60){
+  mathGrade = "F" 
+} else {
+  mathGrade = "Invalid Grade"
+};
+
+
+if(scienceScore >= 90 && scienceScore <= 100){
+  scienceGrade = "A";
+} else if (scienceScore >= 80){
+  scienceGrade = "B" 
+} else if (scienceScore >= 70){
+  scienceGrade = "C" 
+} else if (scienceScore >= 60){
+  scienceGrade = "D" 
+} else if (scienceScore < 60){
+  scienceGrade = "F" 
+} else {
+  scienceGrade = "Invalid Grade"
+};
+
+
+if(englishScore >= 90 && englishScore <= 100){
+  englishGrade = "A";
+} else if (englishScore >= 80){
+  englishGrade = "B" 
+} else if (englishScore >= 70){
+  englishGrade = "C" 
+} else if (englishScore >= 60){
+  englishGrade = "D" 
+} else if (englishScore < 60){
+  englishGrade = "F" 
+} else {
+  englishGrade = "Invalid Grade"
+};
+
+if(historyScore >= 90 && historyScore <= 100){
+  historyGrade = "A";
+} else if (historyScore >= 80){
+  historyGrade = "B" 
+} else if (historyScore >= 70){
+  historyGrade = "C" 
+} else if (historyScore >= 60){
+  historyGrade = "D" 
+} else if (historyScore < 60){
+  historyGrade = "F" 
+} else {
+  historyGrade = "Invalid Grade"
+};
+
+if(artScore >= 90 && artScore <= 100){
+  artGrade = "A";
+} else if (artScore >= 80){
+  artGrade = "B" 
+} else if (artScore >= 70){
+  artGrade = "C" 
+} else if (artScore >= 60){
+  artGrade = "D" 
+} else if (artScore < 60){
+  artGrade = "F" 
+} else {
+  artGrade = "Invalid Grade"
+};
+
+
 
 // TODO: Also calculate grade points for each (4.0, 3.0, etc.)
-let mathPoints: number = 0;
-let sciencePoints: number = 0;
-let englishPoints: number = 0;
-let historyPoints: number = 0;
-let artPoints: number = 0;
+let mathPoints: number;
+let sciencePoints: number;
+let englishPoints: number;
+let historyPoints: number;
+let artPoints: number;
+
+switch(mathGrade){
+  case "A":
+    mathPoints = 4.0;
+    break;
+  case "B":
+    mathPoints = 3.0;
+    break;
+  case "C":
+    mathPoints = 2.0;
+    break;
+  case "D":
+    mathPoints = 1.0;
+    break;
+  case "F":
+    mathPoints = 0.0;
+    break;
+  default:
+    mathPoints = 0.0   
+}
+
+switch(scienceGrade){
+  case "A":
+    sciencePoints = 4.0;
+    break;
+  case "B":
+    sciencePoints = 3.0;
+    break;
+  case "C":
+    sciencePoints = 2.0;
+    break;
+  case "D":
+    sciencePoints = 1.0;
+    break;
+  case "F":
+    sciencePoints = 0.0;
+    break;
+  default:
+    sciencePoints = 0.0   
+}
+
+switch(englishGrade){
+  case "A":
+    englishPoints= 4.0;
+    break;
+  case "B":
+    englishPoints = 3.0;
+    break;
+  case "C":
+    englishPoints = 2.0;
+    break;
+  case "D":
+    englishPoints = 1.0;
+    break;
+  case "F":
+    englishPoints = 0.0;
+    break;
+  default:
+    englishPoints = 0.0   
+}
+
+switch(historyGrade){
+  case "A":
+    historyPoints = 4.0;
+    break;
+  case "B":
+    historyPoints = 3.0;
+    break;
+  case "C":
+    historyPoints = 2.0;
+    break;
+  case "D":
+    historyPoints = 1.0;
+    break;
+  case "F":
+    historyPoints = 0.0;
+    break;
+  default:
+    historyPoints = 0.0   
+}
+
+switch(artGrade){
+  case "A":
+    artPoints = 4.0;
+    break;
+  case "B":
+    artPoints = 3.0;
+    break;
+  case "C":
+    artPoints = 2.0;
+    break;
+  case "D":
+    artPoints = 1.0;
+    break;
+  case "F":
+    artPoints = 0.0;
+    break;
+  default:
+    artPoints = 0.0   
+}
 
 // ============================================================
 // TODO: Calculate Averages and GPA
 // ============================================================
 
 // TODO: Calculate the average score
-const averageScore: number = 0;
+const averageScore: number = (mathScore + scienceScore + englishScore + historyScore + artScore)/numberOfClasses;
 
 // TODO: Calculate GPA (average of grade points)
-const gpa: number = 0;
+const gpa: number = (mathPoints + sciencePoints + englishPoints + historyPoints + artPoints)/numberOfClasses;
 
 // TODO: Determine overall letter grade based on average
-let overallGrade: string = "";
+let overallGrade: string;
+if(averageScore >= 90 && averageScore <= 100){
+  overallGrade = "A";
+} else if(averageScore >= 80) {
+  overallGrade = "B";
+} else if(averageScore >= 70) {
+  overallGrade = "C";
+} else if(averageScore >= 60) {
+  overallGrade = "D";
+} else {
+  overallGrade = "F";
+}
+
 
 // ============================================================
 // TODO: Pass/Fail Determination
 // ============================================================
 
 // TODO: Check if each subject is passing (>= 60)
-const mathPassing: boolean = false;
-const sciencePassing: boolean = false;
-const englishPassing: boolean = false;
-const historyPassing: boolean = false;
-const artPassing: boolean = false;
-
 // TODO: Count passing and failing subjects
 let passingCount: number = 0;
 let failingCount: number = 0;
 
-// TODO: Overall pass (all subjects passing) or fail
-const overallPassing: boolean = false;
+let mathPassing: boolean;
+let englishPassing: boolean;
+let sciencePassing: boolean;
+let historyPassing: boolean;
 
+let artPassing: boolean;
+
+
+if(mathScore >= passingScore) {
+  mathPassing = true;
+  passingCount++;
+} 
+else {
+  mathPassing = false;
+  failingCount++;
+};
+
+if(englishScore >= passingScore) {
+  englishPassing = true;
+  passingCount++;
+
+} 
+else {
+  englishPassing = false;
+  failingCount++;
+};
+
+if(scienceScore >= passingScore) {
+  sciencePassing = true;
+  passingCount++;
+} 
+else {
+  sciencePassing = false;
+  failingCount++;
+};
+
+if(historyScore >= passingScore) {
+  historyPassing = true;
+  passingCount++;
+} 
+else {
+  historyPassing = false;
+  failingCount++;
+}
+
+
+if(artScore >= passingScore) {
+  artPassing = true;
+  passingCount++;
+} 
+else {
+  artPassing = false;
+  failingCount++;
+}
+
+
+
+
+
+
+// TODO: Overall pass (all subjects passing) or fail
+const overallPassing: boolean = failingCount === 0;
 // ============================================================
 // TODO: Academic Standing (use switch)
 // ============================================================
@@ -101,18 +341,66 @@ const overallPassing: boolean = false;
  * 0-0.99: "Academic Probation"
  */
 
+let academicStanding: string;
+  if(gpa >= 3.5){
+    academicStanding = "Dean's List";
+  }
+  else if(gpa >= 3.0 && gpa < 3.5){
+    academicStanding = "Good Standing";
+  }
+  else if(gpa >= 2.0 && gpa < 3.0){
+    academicStanding = "Satisfactory";
+  }
+  else if(gpa >= 1.0 && gpa < 2.0){
+    academicStanding = "Academic Warning";
+  }
+  else{
+    academicStanding = "Academic Probation";
+  }
 // TODO: Determine academic standing
-let academicStanding: string = "";
+
+
 
 // ============================================================
 // TODO: Performance Feedback
 // ============================================================
 
 // TODO: Find the highest and lowest scores
-let highestScore: number = 0;
-let lowestScore: number = 0;
-let highestSubject: string = "";
-let lowestSubject: string = "";
+let highestScore: number = Math.max(mathScore,historyScore,scienceScore,englishScore,artScore);
+let lowestScore: number = Math.min(mathScore,historyScore,scienceScore,englishScore,artScore);
+
+let highestSubject: string;
+
+if (highestScore === mathScore) {
+  highestSubject = "Math";
+} else if (highestScore === historyScore) {
+  highestSubject = "History";
+} else if (highestScore === scienceScore) {
+  highestSubject = "Science";
+} else if (highestScore === englishScore) {
+  highestSubject = "English";
+} else if (highestScore === artScore) {
+  highestSubject = "Art";
+} else {
+  highestSubject = "Invalid";
+}
+
+let lowestSubject: string;
+
+if (lowestScore === mathScore) {
+  lowestSubject = "Math";
+} else if (lowestScore === historyScore) {
+  lowestSubject = "History";
+} else if (lowestScore === scienceScore) {
+  lowestSubject = "Science";
+} else if (lowestScore === englishScore) {
+  lowestSubject = "English";
+} else if (lowestScore === artScore) {
+  lowestSubject = "Art";
+} else {
+  lowestSubject = "Invalid";
+}
+
 
 // TODO: Generate personalized feedback
 let feedback: string = "";
