@@ -31,7 +31,7 @@ console.log("--- Basic Server Structure ---");
 
 // This is what a basic server looks like:
 const basicServerExample = `
-Bun.serve({
+Bun.serve({ 
   port: 3000,
   fetch(request) {
     return new Response("Hello, World!");
@@ -55,7 +55,7 @@ console.log(basicServerExample);
 console.log("--- Request Object Properties ---");
 
 // Simulating a request (normally comes from the server)
-const exampleRequest = new Request("http://localhost:3000/users/123?active=true", {
+const exampleRequest = new Request("v", {
   method: "POST",
   headers: {
     "Content-Type": "application/json",

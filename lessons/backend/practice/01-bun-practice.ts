@@ -103,21 +103,13 @@ function generateId(): string {
  */
 
 async function measureTime<T>(fn: () => Promise<T>): Promise<{ result: T; durationMs: number }> {
-  // TODO: Implement using Bun.nanoseconds()
-  // Hint: Take time before and after calling fn()
+
   const start: number = Bun.nanoseconds();
-
-  Bun.sleep(100);
-
+  const result = await fn();
   const end: number = Bun.nanoseconds();
 
-  const result = await fn();
-  return { result, durationMs: 0 };
-
-  // note from LR: might need to do some research about Promise
-  //
-  //
-  //
+  const durationMs = (end - start);
+  return { result, durationMs };
 }
 
 // ============================================================
@@ -130,11 +122,15 @@ async function measureTime<T>(fn: () => Promise<T>): Promise<{ result: T; durati
  */
 
 import { $, file } from "bun";
+import { promise } from "zod/v4";
 
 async function runCommand(command: string): Promise<string | null> {
   // TODO: Implement using Bun.$
   // Hint: Use try/catch to handle errors
   // Hint: Parse command string and execute
+  
+  const output = $`echo "Testing Testing Testing!"`.text();
+
   return null;
 }
 
