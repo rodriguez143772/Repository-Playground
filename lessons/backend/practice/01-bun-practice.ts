@@ -26,14 +26,16 @@ console.log("========================================\n");
 
 async function readJsonFile<T>(path: string, defaultValue: T): Promise<T> {
 
-  const file = Bun.file("package.json");
+  const file = Bun.file(path);
   if(await file.exists()){
-    const contents = file.json();
-    return contents
+    const contents = await file.json();
+    console.log(contents)
+    return contents as T;
+    
   }
-  else{
-    return defaultValue;
-  }
+  console.log(`Does not exist, Default: ${defaultValue}`)
+  return defaultValue as T;
+
   
 }
 
@@ -47,9 +49,7 @@ async function readJsonFile<T>(path: string, defaultValue: T): Promise<T> {
 
 async function writeJsonFile(path: string, data: unknown): Promise<void> {
 
-  const testFilePath = path
-  const dataToWrite = { data };
-  Bun.write(testFilePath, JSON.stringify(dataToWrite, null, 2)); 
+  await Bun.write(path, JSON.stringify(data, null, 2)); 
   
 }
 
@@ -70,12 +70,7 @@ async function verifyPassword(password: string, hash: string): Promise<boolean> 
 
 
   const isVerified = await Bun.password.verify(password, hash)
-  if(isVerified){
-    return true;
-  }
-  else{
-    return false;  
-  }
+  return isVerified;
   
 }
 
@@ -103,14 +98,15 @@ function generateId(): string {
  */
 
 async function measureTime<T>(fn: () => Promise<T>): Promise<{ result: T; durationMs: number }> {
-
-  const start: number = Bun.nanoseconds();
+  const start = Bun.nanoseconds();
   const result = await fn();
-  const end: number = Bun.nanoseconds();
+  const end = Bun.nanoseconds();
 
   const durationMs = (end - start);
   return { result, durationMs };
 }
+
+
 
 // ============================================================
 // PROBLEM 6: Run Shell Command
@@ -125,13 +121,19 @@ import { $, file } from "bun";
 import { promise } from "zod/v4";
 
 async function runCommand(command: string): Promise<string | null> {
-  // TODO: Implement using Bun.$
-  // Hint: Use try/catch to handle errors
-  // Hint: Parse command string and execute
-  
-  const output = $`echo "Testing Testing Testing!"`.text();
 
-  return null;
+  try{
+    const shellOutput = await $`${{raw: command}}`.text();
+    console.log("Output Success")
+    console.log(shellOutput)
+    return(shellOutput);
+  }
+
+  
+  catch(err){
+    console.log(err)
+    return(null)
+  }
 }
 
 // ============================================================
@@ -142,11 +144,12 @@ async function runCommand(command: string): Promise<string | null> {
  * Create a function that sets up file watching.
  * Returns a cleanup function to stop watching.
  */
-
+import { watch } from 'node:fs';
 function watchFile(path: string, onChange: (event: string) => void): () => void {
   // TODO: Implement using fs.watch
   // Hint: Import watch from 'node:fs'
   // Hint: Return a function that calls watcher.close()
+
 
   return () => {};
 }
@@ -165,8 +168,50 @@ function getEnv(name: string, options?: { default?: string; required?: boolean }
   // Hint: Check if value exists
   // Hint: Return default if provided
   // Hint: Throw if required and not found
-  return "";
-}
+
+  // Takes a string (name), and an object (options), then returns a string. 
+  // It can either return the environment Variable if it is defined.
+    const envVar = process.env[name]
+
+    //  if(envVar){
+    //   return envVar;
+    // }
+    // if(options?.default){
+    //   return options.default
+    // }
+    // if(options?.required){
+    //   throw new Error("Environment Variable and Default not found")
+    // }
+    // else{
+    //   return ""
+    // }
+
+    // if no environment variable, and there is a default, return the default
+      // if(!envVar){ 
+      //   if(options?.default){
+      //     return options.default
+      //   }
+      //   if(options?.required){
+      //     throw new Error(`There is no default nor environment variable with the name ${name}`)
+      //   }
+      //     return ""
+      // }
+      // return envVar
+
+      
+      return envVar !== undefined 
+      ? envVar 
+      : options?.default !== undefined 
+      ? options.default 
+      : options?.required 
+      ? (() => {throw new Error("ENV Does not exist")})() 
+      : ""
+
+
+  }
+
+
+
 
 // ============================================================
 // TESTS
@@ -242,6 +287,7 @@ if (sleepResult === "done" && durationMs >= 40) {
 
 // Test 6: Run command
 const bunVersion = await runCommand("bun --version");
+
 
 if (bunVersion && bunVersion.includes(".")) {
   console.log("✅ Problem 6: Shell commands work");
