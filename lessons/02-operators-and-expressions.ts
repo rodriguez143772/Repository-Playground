@@ -310,7 +310,7 @@ console.log("With ??:", displayCount2);  // 0
  */
 
 console.log("\n========================================");
-console.log("OPTIONAL CHAINING (?.);
+console.log("OPTIONAL CHAINING (?.)");
 console.log("========================================\n");
 
 interface User {

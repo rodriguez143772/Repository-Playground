@@ -1,0 +1,17 @@
+
+function getEnv(name: string, options?: { default?: string; required?: boolean }): string {
+  // TODO: Implement using Bun.env or process.env
+  // Hint: Check if value exists
+  // Hint: Return default if provided
+  // Hint: Throw if required and not found
+
+    const envVar =  process.env.name;
+
+
+
+  }
+
+//TEST CASE
+//process.env.TEST_VAR = "test_value";
+//const envValue = getEnv("TEST_VAR");
+//const defaultValue = getEnv("NONEXISTENT_VAR", { default: "default" });

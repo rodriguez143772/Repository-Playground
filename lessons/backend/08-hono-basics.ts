@@ -43,7 +43,6 @@ const app = new Hono();
 app.get("/", (c) => {
   return c.text("Hello, Hono!");
 });
-
 app.get("/json", (c) => {
   return c.json({ message: "Hello, JSON!" });
 });
@@ -79,7 +78,7 @@ app.get("/example", (c) => {
   
   // Response helpers
   c.text("Hello")     // Text response
-  c.json({ ok: true }) // JSON response
+  c.json({ ok: true }) // JSON response / JSON Object
   c.html("<h1>Hi</h1>") // HTML response
   c.redirect("/other")  // Redirect
   c.notFound()          // 404 response
@@ -262,6 +261,7 @@ Bun.serve({
   fetch: app.fetch,
 });
 `;
+
 console.log(serverCode);
 
 // ============================================================
@@ -271,6 +271,7 @@ console.log(serverCode);
 console.log("--- Complete Example ---");
 
 const completeApp = new Hono();
+export default completeApp;
 
 // In-memory data
 const todos = [
@@ -282,6 +283,7 @@ const todos = [
 completeApp.get("/todos", (c) => {
   return c.json(todos);
 });
+
 
 // Get single todo
 completeApp.get("/todos/:id", (c) => {
@@ -303,6 +305,7 @@ completeApp.post("/todos", async (c) => {
     text: body.text,
     done: false,
   };
+  
   todos.push(newTodo);
   return c.json(newTodo, 201);
 });
@@ -334,3 +337,16 @@ console.log("6. Group routes with: app.route('/prefix', subApp)");
 console.log("7. Export app for Bun to serve");
 
 console.log("\n✅ Lesson 8 Complete! Run: bun lessons/backend/09-route-parameters.ts");
+
+console.log("Testing Route: GET /Todo");
+
+
+const testResponse = await completeApp.request("/todos", {method : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
+  text: "Testing Todo", done: false
+}),});
+
+// Testing the post response
+
+
+//const res4 = await app.request("/users", { method: "POST" });
+//console.log(`POST /users -> ${res4.status}: ${JSON.stringify(await res4.json())}`);
